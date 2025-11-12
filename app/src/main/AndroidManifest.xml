@@ -1,0 +1,44 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.verificacionpagoapp">
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/Theme.VerificacionPagoApp">
+
+        <!-- LauncherActivity es la pantalla principal -->
+        <activity
+            android:name=".LauncherActivity"
+            android:label="Inicio"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".ChangePasswordActivity"
+            android:label="Cambiar Contraseña"
+            android:exported="true" />
+
+        <activity
+            android:name=".TiposPagoActivity"
+            android:label="Tipos de Pago"
+            android:exported="true" />
+
+        <activity
+            android:name=".VerificacionPagoActivity"
+            android:label="Verificación de Pago"
+            android:exported="true" />
+
+        <!-- Nueva actividad: Perfil de Empresa -->
+        <activity
+            android:name=".EmpresaPerfilActivity"
+            android:label="Perfil de Empresa"
+            android:exported="true" />
+
+    </application>
+
+</manifest>

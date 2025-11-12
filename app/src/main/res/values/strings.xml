@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Verificación de Pago</string>
+    <string name="company_name">Fundación Ayuda Solidaria</string>
+    <string name="company_info">Apoyamos a la comunidad con donaciones y solidaridad.</string>
+    <string name="button_info">Información</string>
+    <string name="donation_type">Tipo de Donaciones</string>
+    <string name="donation_books">Libros</string>
+    <string name="donation_money">Dinero</string>
+    <string name="instagram">Instagram</string>
+    <string name="transport">Transporte</string>
+    <string name="edit_profile">Editar perfil</string>
+    <string name="change_language">Cambio de idioma</string>
+    <string name="back">Volver</string>
+</resources>

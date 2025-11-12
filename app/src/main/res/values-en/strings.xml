@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Payment Verification</string>
+    <string name="company_name">Solidarity Aid Foundation</string>
+    <string name="company_info">We support the community with donations and solidarity.</string>
+    <string name="button_info">Information</string>
+    <string name="donation_type">Donation Type</string>
+    <string name="donation_books">Books</string>
+    <string name="donation_money">Money</string>
+    <string name="instagram">Instagram</string>
+    <string name="transport">Transport</string>
+    <string name="edit_profile">Edit profile</string>
+    <string name="change_language">Change language</string>
+    <string name="back">Back</string>
+</resources>

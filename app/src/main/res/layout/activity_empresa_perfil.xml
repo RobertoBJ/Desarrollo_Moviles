@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:padding="32dp"
+        android:layout_gravity="center">
+
+        <ImageButton
+            android:id="@+id/button_back"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/arrow_circle_o_left"
+            android:contentDescription="Volver"
+            app:tint="#4CAF50"
+            android:scaleType="centerInside"
+            android:layout_gravity="start"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Imagen circular de la empresa -->
+        <ImageView
+            android:id="@+id/image_company"
+            android:layout_width="180dp"
+            android:layout_height="180dp"
+            android:layout_marginBottom="12dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/empresa_logo"
+            android:background="@drawable/circle_background"
+            android:clipToOutline="true" />
+
+        <!-- Nombre de la empresa -->
+        <TextView
+            android:id="@+id/text_company_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="NOMBRE DE LA EMPRESA"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:layout_marginBottom="16dp"
+            android:textColor="#000000" />
+
+        <!-- Botón Información -->
+        <Button
+            android:id="@+id/button_info"
+            android:layout_width="530dp"
+            android:layout_height="78dp"
+            android:text="Apoyamos a la comunidad con donaciones y solidaridad."
+            android:backgroundTint="#d3d3d3"
+            android:textColor="#000"
+            android:textSize="10sp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Tipo de donaciones -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tipo de Donaciones"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_marginBottom="8dp"
+            android:textColor="#000" />
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp">
+
+            <Button
+                android:id="@+id/button_books"
+                android:layout_width="100dp"
+                android:layout_height="42dp"
+                android:text="Libros"
+                android:backgroundTint="#f4b183"
+                android:textColor="#000"
+                android:textSize="14sp"
+                android:layout_marginEnd="12dp" />
+
+            <Button
+                android:id="@+id/button_money"
+                android:layout_width="100dp"
+                android:layout_height="42dp"
+                android:text="Dinero"
+                android:backgroundTint="#f4b183"
+                android:textColor="#000"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <!-- Iconos redes sociales -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp">
+
+            <ImageButton
+                android:id="@+id/button_instagram"
+                android:layout_width="45dp"
+                android:layout_height="45dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/instagram"
+                android:contentDescription="Instagram"
+                app:tint="#000000" />
+
+            <ImageButton
+                android:id="@+id/button_car"
+                android:layout_width="45dp"
+                android:layout_height="45dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/coche_alternativo"
+                android:contentDescription="Transporte"
+                android:layout_marginStart="20dp"
+                android:scaleType="centerInside" />
+        </LinearLayout>
+
+        <!-- Editar perfil -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="20dp">
+
+            <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:src="@drawable/ic_edit"
+                android:contentDescription="Editar"
+                app:tint="#000000" />
+
+            <TextView
+                android:id="@+id/text_edit_profile"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Editar perfil"
+                android:textSize="16sp"
+                android:layout_marginStart="8dp"
+                android:textColor="#000" />
+        </LinearLayout>
+
+        <!-- Botón cambio de idioma -->
+        <Button
+            android:id="@+id/button_change_language"
+            android:layout_width="180dp"
+            android:layout_height="48dp"
+            android:text="Cambio de idioma"
+            android:backgroundTint="#d3d3d3"
+            android:textColor="#000"
+            android:textSize="15sp" />
+
+    </LinearLayout>
+</ScrollView>
