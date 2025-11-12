@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Project1</string>
+    <string name="direct_message">Direct Message</string>
+    <string name="rate_us">Rate Us</string>
+    <string name="chat_with">Chat with %1$s</string>
+    <!-- Pantalla Ayuda -->
+    <string name="help_title">How can we help you?!!!</string>
+    <string name="write_issue">Write your issue:</string>
+    <string name="write_issue_placeholder">People can write their issue here</string>
+    <string name="contact_whatsapp">You can also contact us via WhatsApp if we take too long</string>
+
+    <!-- Pantalla Opinión / Feedback -->
+    <string name="opinion_greeting">Great to hear from you! How’s it going?</string>
+    <string name="opinion_prompt">If you’re loving it, we’d love your feedback!</string>
+    <string name="opinion_description">Please share your thoughts about the app, we’re excited to hear from you!</string>
+
+    <!-- Botones y menús -->
+    <string name="back">Back</string>
+    <string name="menu">Menu</string>
+    <string name="profile">Profile</string>
+    <string name="notifications">Notifications</string>
+    <string name="help">Help</string>
+</resources>

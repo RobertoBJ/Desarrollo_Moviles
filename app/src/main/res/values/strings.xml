@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">proyecto1</string>
+    <string name="direct_message">Mensajes Directos</string>
+    <string name="rate_us">Califícanos</string>
+    <string name="chat_with">Chat con %1$s</string>//creo que no hay necesidad pero por si acaso
+    <string name="help_title">¿En qué te podemos ayudar?</string>
+    <string name="write_issue">Escribe tu problema:</string>
+    <string name="write_issue_placeholder">Las personas podrán escribir su problema</string>
+    <string name="contact_whatsapp">También puedes contactarnos por WhatsApp si tardamos mucho</string>
+
+    <!-- Pantalla Opinión / Feedback -->
+    <string name="opinion_greeting">¡Qué gusto saber de ti! ¿Qué tal te la estás pasando?</string>
+    <string name="opinion_prompt">Si te está encantando, nos encantaría que nos des tu opinión</string>
+    <string name="opinion_description">Por favor, comparte con nosotros qué te parece la aplicación, nos emociona saberlo</string>
+
+    <!-- Botones y menús -->
+    <string name="back">Volver</string>
+    <string name="menu">Menú</string>
+    <string name="profile">Perfil</string>
+    <string name="notifications">Notificaciones</string>
+    <string name="help">Ayuda</string>
+
+</resources>
