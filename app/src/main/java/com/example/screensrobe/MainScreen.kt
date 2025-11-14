@@ -1,5 +1,6 @@
 package com.example.screensrobe
 
+import TrendsScreen
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 
@@ -9,10 +10,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavController
 
 
 @Composable
-fun MainScreen() {
+fun MainScreen(navController: NavController) {
     var selectedItem by remember { mutableStateOf(0) }
 
     Scaffold(
@@ -24,10 +26,10 @@ fun MainScreen() {
         }
     ) { innerPadding ->
         when (selectedItem) {
-            0 -> PostScreen(modifier = Modifier.padding(innerPadding)) // Inicio
-            1 -> PostScreen(modifier = Modifier.padding(innerPadding))
-            2 -> PostScreen(modifier = Modifier.padding(innerPadding))
-            3 -> PostScreen(modifier = Modifier.padding(innerPadding))
+            0 -> HomeScreen(navController, modifier = Modifier.padding(innerPadding)) //
+            1 -> TrendsScreen(navController, modifier = Modifier.padding(innerPadding))
+            2 -> CommunityScreen(navController, modifier = Modifier.padding(innerPadding))
+            3 -> MensajeDirectoScreen(navController, modifier = Modifier.padding(innerPadding))
         }
     }
 }

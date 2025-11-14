@@ -19,7 +19,12 @@ class MainActivity : ComponentActivity() {
                     composable("create_account") { CreateAccountScreen() }
                     composable("createcompany") { CreateCompanyAccountScreen() }
                     composable("loginenterprise") { LoginEnterprise(navController) }
-                    composable("main") { MainScreen() } // Pantalla con barra inferior
+                    composable("profile") { ProfileScreen(navController) }
+                    composable("public") { PostScreen(navController) }
+                    composable("help") { AyudaScreen(navController) }
+                    composable("conf") { ConfiguracionScreen(navController) }
+                    composable("main") { MainScreen(navController) } // Pantalla con barra inferior
+
                 }
             }
         }

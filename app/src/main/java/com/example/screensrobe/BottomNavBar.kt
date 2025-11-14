@@ -31,7 +31,7 @@ fun BottomNavBar(
         Icons.Default.Person
     )
 
-    val labels = listOf("Inicio", "Buscar", "Explorar", "Perfil")
+    val labels = listOf("Inicio", "Buscar", "Explorar", "Mensajes")
 
     NavigationBar(
         containerColor = Color(0xFFE5D8D8),
@@ -51,7 +51,7 @@ fun BottomNavBar(
             NavigationBarItem(
                 selected = isSelected,
                 onClick = { onItemSelected(index) },
-                alwaysShowLabel = true, // ✅ fuerza a mostrar el texto siempre
+                alwaysShowLabel = true, //
                 icon = {
                     Icon(
                         imageVector = icon,

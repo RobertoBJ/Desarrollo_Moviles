@@ -45,17 +45,17 @@ fun CreateAccountScreen() {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    "Create Account",
+                    "Crear Cuenta",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
                 )
 
-                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name:") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = firstName, onValueChange = { firstName = it }, label = { Text("First name:") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = gender, onValueChange = { gender = it }, label = { Text("Gender:") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nombre:") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = firstName, onValueChange = { firstName = it }, label = { Text("Apellido:") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = gender, onValueChange = { gender = it }, label = { Text("Genero:") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = date, onValueChange = { date = it }, label = { Text("Date:") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Email:") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = password, onValueChange = { password = it }, label = { Text("Password:") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Correo:") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = password, onValueChange = { password = it }, label = { Text("Contraseña:") }, modifier = Modifier.fillMaxWidth())
 
                 Button(
                     onClick = { /* No funcional */ },
