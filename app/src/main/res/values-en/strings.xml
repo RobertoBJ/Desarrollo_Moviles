@@ -1,4 +1,41 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="welcome">welcome</string>
+
+    <!-- App -->
+    <string name="app_name" translatable="false">Share and Care</string>
+    <string name="welcome">Welcome</string>
+
+    <!-- Payment verification -->
+    <string name="verificacion_pago_titulo">Payment Verification</string>
+    <string name="pago_correcto">Payment completed successfully</string>
+    <string name="aceptar">Accept</string>
+
+    <!-- Payment method -->
+    <string name="metodo_pago_titulo">Select your payment method</string>
+
+    <!-- Company -->
+    <string name="empresa_titulo">Company</string>
+    <string name="empresa_nombre">Solidarity Support Foundation</string>
+    <string name="empresa_descripcion">WE SUPPORT THE COMMUNITY WITH DONATIONS AND SOLIDARITY.</string>
+    <string name="tipo_donaciones">Donation Types</string>
+    <string name="libros">BOOKS</string>
+    <string name="dinero">MONEY</string>
+    <string name="editar_perfil">Edit profile</string>
+    <string name="cambio_idioma">CHANGE LANGUAGE</string>
+
+    <!-- Settings -->
+    <string name="configuracion_titulo">Settings</string>
+    <string name="tu_cuenta">Your account</string>
+    <string name="seguridad">Security</string>
+    <string name="calificanos">Rate us</string>
+
+    <!-- Change password -->
+    <string name="cambiar_contra_titulo">Change password</string>
+    <string name="nueva_contra">New password (6 characters)</string>
+    <string name="confirmar_contra">Confirm password</string>
+    <string name="boton_confirmar">Confirm</string>
+    <string name="error_campos">Please fill in all fields</string>
+    <string name="error_largo">It must have exactly 6 characters</string>
+    <string name="error_coinciden">Passwords do not match</string>
+    <string name="contra_guardada">Password saved successfully</string>
+
 </resources>

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "425352432466",
+    "project_id": "app-android-5e888",
+    "storage_bucket": "app-android-5e888.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:425352432466:android:0adab1998752339778088b",
+        "android_client_info": {
+          "package_name": "com.example.screensrobe"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA4bkFcLsd7dsf3QchZ6d9vYN-h9PpKTPY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

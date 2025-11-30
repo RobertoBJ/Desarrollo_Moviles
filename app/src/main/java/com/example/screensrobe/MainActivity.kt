@@ -25,6 +25,18 @@ class MainActivity : ComponentActivity() {
                     composable("conf") { ConfiguracionScreen(navController) }
                     composable("main") { MainScreen(navController) } // Pantalla con barra inferior
 
+                    composable("cambiar_contrasena") {
+                        CambiarContraseñaScreen(navController)
+                    }
+
+                    composable("metodo_pago") {
+                        MetodoPagoScreen(navController)
+                    }
+                    composable("verificacion_pago") { VerificacionPagoScreen(navController) }
+                    composable("empresa") { EmpresaScreen(navController) }
+
+
+
                 }
             }
         }
