@@ -16,8 +16,8 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 NavHost(navController = navController, startDestination = "login") {
                     composable("login") { LoginScreen(navController) }
-                    composable("create_account") { CreateAccountScreen() }
-                    composable("createcompany") { CreateCompanyAccountScreen() }
+                    composable("create_account") { CreateAccountScreen(navController) }
+                    composable("createcompany") { CreateCompanyAccountScreen(navController) }
                     composable("loginenterprise") { LoginEnterprise(navController) }
                     composable("profile") { ProfileScreen(navController) }
                     composable("public") { PostScreen(navController) }

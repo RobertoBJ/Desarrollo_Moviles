@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "675127993540",
+    "project_id": "share-and-care-97d88",
+    "storage_bucket": "share-and-care-97d88.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:675127993540:android:9595b04d26cb9304b19591",
+        "android_client_info": {
+          "package_name": "com.example.screensrobe"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD-eAHY-hqQJj_n9juIV_xtVyMmcCAWDSI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
