@@ -1,9 +1,10 @@
 package com.example.screensrobe
 
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -22,6 +23,8 @@ import androidx.navigation.NavController
 
 @Composable
 fun ConfiguracionScreen(navController: NavController) {
+
+    // Lista de opciones del menú
     val opciones = listOf(
         Pair(Icons.Default.Person, "Tu cuenta"),
         Pair(Icons.Default.Lock, "Seguridad"),
@@ -42,8 +45,9 @@ fun ConfiguracionScreen(navController: NavController) {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // Foto de perfil o logo
-                    IconButton(onClick = {  navController.navigate("profile")  }) {
+
+                    // Botón para ir al perfil
+                    IconButton(onClick = { navController.navigate("profile") }) {
                         Icon(
                             painter = painterResource(id = R.drawable.gojo),
                             contentDescription = "Perfil",
@@ -56,7 +60,7 @@ fun ConfiguracionScreen(navController: NavController) {
 
                     // Título
                     Text(
-                        text = "Configuracion",
+                        text = "Configuración",
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
                             color = Color.Black,
@@ -64,13 +68,20 @@ fun ConfiguracionScreen(navController: NavController) {
                         )
                     )
 
+                    // Menú de opciones (ya lo tenías hecho)
                     MenuDesplegable(navController)
                 }
             }
         },
         containerColor = Color(0xFFF4F2EB)
     ) { padding ->
-        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -78,22 +89,42 @@ fun ConfiguracionScreen(navController: NavController) {
                     .padding(horizontal = 20.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+
                 opciones.forEach { (icono, texto) ->
+
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(Color(0xFFF3D3AC), RoundedCornerShape(10.dp))
-                            .padding(14.dp),
+                            .padding(14.dp)
+                            .clickable {
+                                when (texto) {
+
+                                    // 👉 Aquí se abre la pantalla de calificaciones
+                                    "Califícanos" -> navController.navigate("opinion")
+
+                                    // Puedes agregar más rutas si agregas pantallas
+                                    "Tu cuenta" -> navController.navigate("profile")
+                                    "Seguridad" -> {} // aquí luego agregamos otra ruta
+                                }
+                            },
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+
                         Icon(
                             imageVector = icono,
                             contentDescription = texto,
                             tint = Color(0xFF5A9089),
                             modifier = Modifier.size(26.dp)
                         )
+
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(text = texto, color = Color.Black, fontWeight = FontWeight.SemiBold)
+
+                        Text(
+                            text = texto,
+                            color = Color.Black,
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
                 }
             }
