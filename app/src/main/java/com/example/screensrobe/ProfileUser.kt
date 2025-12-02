@@ -31,10 +31,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import com.example.screensrobe.R
-import java.text.SimpleDateFormat
-import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,10 +44,6 @@ fun ProfileScreen(
     var userData by remember { mutableStateOf<Map<String, Any>?>(null) }
     var loading by remember { mutableStateOf(true) }
 
-    // Lista de posts reactiva
-    val posts = remember { mutableStateListOf<Map<String, Any>>() }
-    var postsLoading by remember { mutableStateOf(true) }
-
     // Cargar datos del usuario
     LaunchedEffect(userId) {
         firestore.collection("users").document(userId)
@@ -60,22 +53,6 @@ fun ProfileScreen(
                 loading = false
             }
             .addOnFailureListener { loading = false }
-    }
-
-    // Listener en tiempo real para los posts del usuario
-    DisposableEffect(userId) {
-        val listener = firestore.collection("posts")
-            .whereEqualTo("userId", userId)
-            .orderBy("timestamp", Query.Direction.DESCENDING)
-            .addSnapshotListener { snapshot, _ ->
-                posts.clear()
-                snapshot?.documents?.forEach { doc ->
-                    posts.add(doc.data ?: emptyMap())
-                }
-                postsLoading = false
-            }
-
-        onDispose { listener.remove() }
     }
 
     Scaffold(
@@ -126,7 +103,7 @@ fun ProfileScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Imagen de perfil
+            // ---------- FOTO DE PERFIL ----------
             val profileImage = data["profileImage"] as? String
             if (!profileImage.isNullOrEmpty()) {
                 AsyncImage(
@@ -148,7 +125,7 @@ fun ProfileScreen(
                 )
             }
 
-            // Nombre
+            // ---------- NOMBRE ----------
             val displayName = if (data["isCompany"] as? Boolean == true) {
                 data["nombreEmpresa"] as? String ?: "Sin nombre"
             } else {
@@ -156,13 +133,14 @@ fun ProfileScreen(
                 val apellido = data["apellido"] as? String ?: ""
                 "$nombre $apellido".ifBlank { "Sin nombre" }
             }
+
             Text(displayName, style = MaterialTheme.typography.headlineMedium, fontSize = 24.sp)
 
-            // Tipo
+            // ---------- TIPO DE CUENTA ----------
             val tipoText = if (data["isCompany"] as? Boolean == true) "Empresa" else "Usuario"
             Text(tipoText, style = MaterialTheme.typography.titleMedium, color = Color(0xFF3E9E8F))
 
-            // Información en Card
+            // ---------- INFORMACIÓN EN CARD ----------
             Card(
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFFF3D3AC)),
@@ -184,92 +162,7 @@ fun ProfileScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Historial de publicaciones
-            Text("Historial de publicaciones", fontWeight = FontWeight.Bold, fontSize = 20.sp)
-            Spacer(modifier = Modifier.height(10.dp))
-
-            when {
-                postsLoading -> {
-                    // Placeholders estilo Shimmer
-                    repeat(3) { ShimmerPostCard() }
-                }
-                posts.isEmpty() -> {
-                    Text("No hay publicaciones", color = Color.Gray)
-                }
-                else -> {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        posts.forEach { post ->
-                            val content = post["content"] as? String ?: ""
-                            val timestamp = post["timestamp"] as? Long
-                            val timeText = timestamp?.let {
-                                val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-                                sdf.format(Date(it))
-                            } ?: ""
-                            Card(
-                                shape = RoundedCornerShape(12.dp),
-                                colors = CardDefaults.cardColors(containerColor = Color(0xFFF3D3AC)),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Column(modifier = Modifier.padding(12.dp)) {
-                                    Text(content, fontSize = 16.sp)
-                                    if (timeText.isNotEmpty()) {
-                                        Spacer(modifier = Modifier.height(6.dp))
-                                        Text(timeText, fontSize = 12.sp, color = Color.Gray)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
             Spacer(modifier = Modifier.height(50.dp))
         }
     }
-}
-
-/** Shimmer placeholder */
-@Composable
-fun ShimmerPostCard() {
-    val shimmerColors = listOf(
-        Color.LightGray.copy(alpha = 0.6f),
-        Color.LightGray.copy(alpha = 0.2f),
-        Color.LightGray.copy(alpha = 0.6f)
-    )
-
-    val brush = rememberShimmerBrush(shimmerColors)
-
-    Card(
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF3D3AC)),
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(100.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(brush)
-        )
-    }
-}
-
-@Composable
-fun rememberShimmerBrush(colors: List<Color>): Brush {
-    val transition = rememberInfiniteTransition()
-    val translateAnim by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1000f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1200, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        )
-    )
-    return Brush.linearGradient(
-        colors = colors,
-        start = Offset(translateAnim, translateAnim),
-        end = Offset(translateAnim + 200f, translateAnim + 200f)
-    )
 }

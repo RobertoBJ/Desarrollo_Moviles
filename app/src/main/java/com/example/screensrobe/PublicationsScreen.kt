@@ -42,7 +42,9 @@ fun PostScreen(navController: NavController) {
 
     val db = FirebaseFirestore.getInstance()
     val currentUser = FirebaseAuth.getInstance().currentUser
+
     val posts = remember { mutableStateListOf<Post>() }
+    var postsLoading by remember { mutableStateOf(true) }
 
     var thinkingText by remember { mutableStateOf(TextFieldValue("")) }
     var isWriting by remember { mutableStateOf(false) }
@@ -50,8 +52,9 @@ fun PostScreen(navController: NavController) {
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    // Cargar posts en tiempo real
+    // 🔥 Cargar todas las publicaciones en tiempo real
     LaunchedEffect(true) {
+        postsLoading = true
         db.collection("posts")
             .orderBy("timestamp", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, _ ->
@@ -68,6 +71,7 @@ fun PostScreen(navController: NavController) {
                         )
                     }
                 }
+                postsLoading = false
             }
     }
 
@@ -98,20 +102,22 @@ fun PostScreen(navController: NavController) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Campo para crear publicación
+
+            // ───────────────────────────────────────────────
+            // 📌 Campo para crear publicación
+            // ───────────────────────────────────────────────
             Card(
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFFF8D6A0)),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
-                    modifier = Modifier
-                        .padding(12.dp)
-                        .fillMaxWidth(),
+                    modifier = Modifier.padding(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+
                     val profilePic = currentUser?.photoUrl?.toString()
-                    if (profilePic != null) {
+                    if (!profilePic.isNullOrEmpty()) {
                         AsyncImage(
                             model = profilePic,
                             contentDescription = "Perfil",
@@ -131,7 +137,7 @@ fun PostScreen(navController: NavController) {
 
                     if (!isWriting) {
                         Text(
-                            text = "¿Qué está pensando?",
+                            "¿Qué está pensando?",
                             fontSize = 17.sp,
                             modifier = Modifier.clickable {
                                 isWriting = true
@@ -148,7 +154,6 @@ fun PostScreen(navController: NavController) {
                             colors = TextFieldDefaults.colors(
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent,
-                                disabledContainerColor = Color.Transparent,
                                 focusedIndicatorColor = Color.Transparent,
                                 unfocusedIndicatorColor = Color.Transparent
                             )
@@ -160,24 +165,21 @@ fun PostScreen(navController: NavController) {
             // Botón publicar
             Button(
                 onClick = {
-                    if (!thinkingText.text.isBlank() && currentUser != null) {
+                    if (thinkingText.text.isNotBlank() && currentUser != null) {
                         val post = hashMapOf(
                             "userId" to currentUser.uid,
-                            "userName" to (currentUser.displayName ?: currentUser.email ?: "Usuario"),
+                            "userName" to (currentUser.displayName ?: "Usuario"),
                             "profileImage" to (currentUser.photoUrl?.toString() ?: ""),
                             "content" to thinkingText.text,
                             "timestamp" to System.currentTimeMillis()
                         )
-                        db.collection("posts").add(post).addOnSuccessListener {
-                            thinkingText = TextFieldValue("")
-                            isWriting = false
-                            keyboardController?.hide()
-                            focusManager.clearFocus()
-                            // Redirigir a main
-                            navController.navigate("main") {
-                                popUpTo("posts") { inclusive = true }
-                            }
-                        }
+
+                        db.collection("posts").add(post)
+
+                        thinkingText = TextFieldValue("")
+                        isWriting = false
+                        keyboardController?.hide()
+                        focusManager.clearFocus()
                     }
                 },
                 shape = RoundedCornerShape(12.dp),
@@ -186,59 +188,70 @@ fun PostScreen(navController: NavController) {
                 Text("Publicar", color = Color.White)
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            // ───────────────────────────────────────────────
+            // 📌 Histórico de publicaciones (nuevo)
+            // ───────────────────────────────────────────────
+            Text(
+                "Historial de publicaciones",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
 
-            // Lista de publicaciones o placeholder
-            if (posts.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(top = 40.dp),
-                    contentAlignment = Alignment.TopCenter
-                ) {
-                    Text(
-                        text = "Aún no hay publicaciones",
-                        fontSize = 16.sp,
-                        color = Color.Gray
-                    )
+            Spacer(modifier = Modifier.height(10.dp))
+
+            when {
+                postsLoading -> {
+                    repeat(3) { ShimmerPostCard2() }
                 }
-            } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    items(posts.filter { it.content.isNotBlank() }) { post -> // ❌ filtrar posts vacíos
-                        Card(
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF8D6A0)),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(modifier = Modifier.padding(12.dp)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    if (!post.profileImage.isNullOrEmpty()) {
-                                        AsyncImage(
-                                            model = post.profileImage,
-                                            contentDescription = "Perfil",
-                                            modifier = Modifier.size(40.dp).clip(CircleShape),
-                                            contentScale = ContentScale.Crop
-                                        )
-                                    } else {
-                                        Image(
-                                            painter = painterResource(id = R.drawable.gojo),
-                                            contentDescription = "Perfil",
-                                            modifier = Modifier.size(40.dp).clip(CircleShape),
-                                            contentScale = ContentScale.Crop
+
+                posts.isEmpty() -> {
+                    Text("No hay publicaciones", color = Color.Gray)
+                }
+
+                else -> {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.fillMaxHeight()
+                    ) {
+                        items(posts) { post ->
+
+                            Card(
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFFF8D6A0)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+
+                                        if (!post.profileImage.isNullOrEmpty()) {
+                                            AsyncImage(
+                                                model = post.profileImage,
+                                                contentDescription = "Perfil",
+                                                modifier = Modifier.size(40.dp).clip(CircleShape),
+                                                contentScale = ContentScale.Crop
+                                            )
+                                        } else {
+                                            Image(
+                                                painter = painterResource(id = R.drawable.gojo),
+                                                contentDescription = "Perfil",
+                                                modifier = Modifier.size(40.dp).clip(CircleShape)
+                                            )
+                                        }
+
+                                        Spacer(modifier = Modifier.width(8.dp))
+
+                                        Text(
+                                            post.userName,
+                                            fontSize = 16.sp,
+                                            fontWeight = FontWeight.Bold
                                         )
                                     }
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = post.userName,
-                                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                                        fontSize = 16.sp
-                                    )
+
+                                    Spacer(modifier = Modifier.height(6.dp))
+
+                                    Text(post.content)
                                 }
-                                Spacer(modifier = Modifier.height(6.dp))
-                                Text(text = post.content)
                             }
                         }
                     }
@@ -246,4 +259,19 @@ fun PostScreen(navController: NavController) {
             }
         }
     }
+}
+
+
+// ───────────────────────────────────────────────
+// ⭐ PLACEHOLDER SHIMMER
+// ───────────────────────────────────────────────
+@Composable
+fun ShimmerPostCard2() {
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFE8E8E8)),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(90.dp)
+    ) {}
 }
