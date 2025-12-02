@@ -47,6 +47,19 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
 
+    implementation ("com.google.firebase:firebase-auth-ktx")
+    implementation ("com.google.firebase:firebase-firestore-ktx")
+    implementation ("com.google.firebase:firebase-storage-ktx")
+    implementation("io.coil-kt:coil-compose:2.2.2")
+    // para subir archivos
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    // para JSON
+    implementation("org.json:json:20231013")
+
+    
+    implementation("androidx.compose.material3:material3:1.2.0-alpha05")
+
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -64,6 +77,8 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.runtime)
     implementation(libs.androidx.ui.text)
+    implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.ui)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

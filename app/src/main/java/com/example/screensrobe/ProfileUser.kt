@@ -1,234 +1,275 @@
 package com.example.screensrobe
 
-import android.content.Context
-import android.os.Build
-import android.os.LocaleList
-import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
+import com.example.screensrobe.R
+import java.text.SimpleDateFormat
+import java.util.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen(navController: NavController, modifier: Modifier = Modifier) {
-    val borderColor = Color(0xFF59C1B8)
-    val backgroundGray = Color(0xFFF2F2F2)
+fun ProfileScreen(
+    userId: String,
+    navController: NavController,
+    isCompany: Boolean = false
+) {
+    val firestore = FirebaseFirestore.getInstance()
+    var userData by remember { mutableStateOf<Map<String, Any>?>(null) }
+    var loading by remember { mutableStateOf(true) }
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Color(0xFFE9F8F5)) // Fondo verde claro
-            .padding(16.dp)
-    ) {
+    // Lista de posts reactiva
+    val posts = remember { mutableStateListOf<Map<String, Any>>() }
+    var postsLoading by remember { mutableStateOf(true) }
+
+    // Cargar datos del usuario
+    LaunchedEffect(userId) {
+        firestore.collection("users").document(userId)
+            .get()
+            .addOnSuccessListener { doc ->
+                if (doc.exists()) userData = doc.data
+                loading = false
+            }
+            .addOnFailureListener { loading = false }
+    }
+
+    // Listener en tiempo real para los posts del usuario
+    DisposableEffect(userId) {
+        val listener = firestore.collection("posts")
+            .whereEqualTo("userId", userId)
+            .orderBy("timestamp", Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshot, _ ->
+                posts.clear()
+                snapshot?.documents?.forEach { doc ->
+                    posts.add(doc.data ?: emptyMap())
+                }
+                postsLoading = false
+            }
+
+        onDispose { listener.remove() }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Perfil", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Atrás")
+                    }
+                },
+                colors = TopAppBarDefaults.largeTopAppBarColors(containerColor = Color(0xFFE5D8D8))
+            )
+        },
+        containerColor = Color(0xFFF4F2EB)
+    ) { padding ->
+        if (loading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color(0xFF59C1B8))
+            }
+            return@Scaffold
+        }
+
+        val data = userData
+        if (data == null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("No se encontraron datos", color = Color.Gray, fontSize = 18.sp)
+            }
+            return@Scaffold
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
+                .padding(padding)
+                .verticalScroll(rememberScrollState())
+                .padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Botón de retroceso
-            Row(
-                Modifier
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.Start
+            // Imagen de perfil
+            val profileImage = data["profileImage"] as? String
+            if (!profileImage.isNullOrEmpty()) {
+                AsyncImage(
+                    model = profileImage,
+                    contentDescription = "Imagen de perfil",
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Image(
+                    painter = painterResource(id = R.drawable.gojo),
+                    contentDescription = "Perfil placeholder",
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+            }
+
+            // Nombre
+            val displayName = if (data["isCompany"] as? Boolean == true) {
+                data["nombreEmpresa"] as? String ?: "Sin nombre"
+            } else {
+                val nombre = data["nombre"] as? String ?: ""
+                val apellido = data["apellido"] as? String ?: ""
+                "$nombre $apellido".ifBlank { "Sin nombre" }
+            }
+            Text(displayName, style = MaterialTheme.typography.headlineMedium, fontSize = 24.sp)
+
+            // Tipo
+            val tipoText = if (data["isCompany"] as? Boolean == true) "Empresa" else "Usuario"
+            Text(tipoText, style = MaterialTheme.typography.titleMedium, color = Color(0xFF3E9E8F))
+
+            // Información en Card
+            Card(
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFF3D3AC)),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                IconButton(onClick = { navController?.popBackStack() }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.flecha), // tu ícono de flecha
-                        contentDescription = "Back",
-                        tint = borderColor,
-                        modifier = Modifier.size(32.dp)
-                    )
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (data["isCompany"] as? Boolean == true) {
+                        Text("Email: ${data["email"] ?: "-"}", fontSize = 16.sp)
+                        Text("Fecha de fundación: ${data["fechaFundacion"] ?: "-"}", fontSize = 16.sp)
+                        Text("Tipo de donaciones: ${data["tipoDonaciones"] ?: "-"}", fontSize = 16.sp)
+                    } else {
+                        Text("Email: ${data["email"] ?: "-"}", fontSize = 16.sp)
+                        Text("Fecha de nacimiento: ${data["fechaNacimiento"] ?: "-"}", fontSize = 16.sp)
+                        Text("Género: ${data["genero"] ?: "-"}", fontSize = 16.sp)
+                    }
                 }
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // Imagen de perfil
-            Image(
-                painter = painterResource(id = R.drawable.gojo), // reemplaza con tu imagen
-                contentDescription = "Profile Image",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(120.dp)
-                    .clip(CircleShape)
-                    .border(3.dp, borderColor, CircleShape)
-            )
+            // Historial de publicaciones
+            Text("Historial de publicaciones", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+            Spacer(modifier = Modifier.height(10.dp))
 
-            Spacer(Modifier.height(16.dp))
-
-            // Nombre y título
-            ProfileField(label = "Roberto", backgroundColor = backgroundGray, borderColor = borderColor)
-            ProfileField(label = "Ing.", backgroundColor = backgroundGray)
-
-            Spacer(Modifier.height(8.dp))
-
-            // Edad y ocupación
-            ProfileField(label = "20 Años", backgroundColor = backgroundGray, borderColor = borderColor)
-            ProfileField(label = "Ocupacion", backgroundColor = backgroundGray)
-            ProfileField(label = "Estudiante", backgroundColor = backgroundGray)
-
-            Spacer(Modifier.height(24.dp))
-
-            // Editar perfil
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier
-                    .clickable { /* acción editar */ }
-                    .padding(8.dp)
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.lapiz_de_color), // ícono lápiz
-                    contentDescription = "Edit",
-                    tint = borderColor,
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(Modifier.width(6.dp))
-                Text(
-                    "Editar perfil",
-                    color = Color.Black,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
-                )
+            when {
+                postsLoading -> {
+                    // Placeholders estilo Shimmer
+                    repeat(3) { ShimmerPostCard() }
+                }
+                posts.isEmpty() -> {
+                    Text("No hay publicaciones", color = Color.Gray)
+                }
+                else -> {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        posts.forEach { post ->
+                            val content = post["content"] as? String ?: ""
+                            val timestamp = post["timestamp"] as? Long
+                            val timeText = timestamp?.let {
+                                val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+                                sdf.format(Date(it))
+                            } ?: ""
+                            Card(
+                                shape = RoundedCornerShape(12.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFFF3D3AC)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Text(content, fontSize = 16.sp)
+                                    if (timeText.isNotEmpty()) {
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Text(timeText, fontSize = 12.sp, color = Color.Gray)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
-            Spacer(Modifier.height(16.dp))
-
-            // Botón cambiar idioma
-            Button(
-                onClick = { /* acción cambiar idioma */ },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = backgroundGray
-                ),
-                shape = RoundedCornerShape(30.dp),
-                modifier = Modifier
-                    .fillMaxWidth(0.8f)
-                    .height(48.dp)
-            ) {
-                Text(
-                    "Change language",
-                    color = Color.Black,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Medium
-                )
-            }
+            Spacer(modifier = Modifier.height(50.dp))
         }
     }
 }
 
+/** Shimmer placeholder */
 @Composable
-fun ProfileField(
-    label: String,
-    backgroundColor: Color,
-    borderColor: Color = Color.Transparent
-) {
-    Box(
+fun ShimmerPostCard() {
+    val shimmerColors = listOf(
+        Color.LightGray.copy(alpha = 0.6f),
+        Color.LightGray.copy(alpha = 0.2f),
+        Color.LightGray.copy(alpha = 0.6f)
+    )
+
+    val brush = rememberShimmerBrush(shimmerColors)
+
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF3D3AC)),
         modifier = Modifier
-            .fillMaxWidth(0.8f)
-            .background(backgroundColor, RoundedCornerShape(12.dp))
-            .border(
-                width = if (borderColor != Color.Transparent) 1.5.dp else 0.dp,
-                color = borderColor,
-                shape = RoundedCornerShape(12.dp)
-            )
-            .padding(vertical = 10.dp, horizontal = 12.dp)
+            .fillMaxWidth()
+            .height(100.dp)
     ) {
-        Text(
-            text = label,
-            color = Color.Black,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.align(Alignment.CenterStart)
-        )
-    }
-
-    Spacer(Modifier.height(8.dp))
-}
-/*
-@Composable
-fun LanguageButton() {
-    val context = LocalContext.current
-    var currentLang by remember { mutableStateOf("es") }
-
-    Button(
-        onClick = {
-            val newLang = if (currentLang == "es") "en" else "es"
-            currentLang = newLang
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                changeLanguage(context, newLang)
-            } else {
-                changeLanguageLegacy(context, newLang)
-            }
-        },
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFFE5E5E5)
-        ),
-        shape = RoundedCornerShape(30.dp),
-        modifier = Modifier
-            .fillMaxWidth(0.8f)
-            .height(48.dp)
-    ) {
-        Text(
-            text = if (currentLang == "es") "Cambiar a Inglés" else "Switch to Spanish",
-            color = Color.Black,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.Medium
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(brush)
         )
     }
 }
 
-fun changeLanguage(context: Context, lang: String) {
-    val appLocale = LocaleList(Locale(lang))
-    AppCompatDelegate.setApplicationLocales(appLocale)
+@Composable
+fun rememberShimmerBrush(colors: List<Color>): Brush {
+    val transition = rememberInfiniteTransition()
+    val translateAnim by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1000f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1200, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        )
+    )
+    return Brush.linearGradient(
+        colors = colors,
+        start = Offset(translateAnim, translateAnim),
+        end = Offset(translateAnim + 200f, translateAnim + 200f)
+    )
 }
-@Suppress("DEPRECATION")
-fun changeLanguageLegacy(context: Context, lang: String) {
-    val locale = Locale(lang)
-    Locale.setDefault(locale)
-
-    val config = context.resources.configuration
-    config.setLocale(locale)
-    context.resources.updateConfiguration(config, context.resources.displayMetrics)
-}
-
-*/

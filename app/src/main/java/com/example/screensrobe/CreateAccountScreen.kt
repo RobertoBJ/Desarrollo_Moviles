@@ -191,12 +191,12 @@ fun CreateAccountScreen(navController: NavController) {
                                         "genero" to gender,
                                         "fechaNacimiento" to date,
                                         "email" to email,
-                                        "tipo" to "usuario"
+                                        "isCompany" to false // false = usuario
                                     )
-                                    db.collection("usuarios").document(uid).set(userData)
+                                    db.collection("users").document(uid).set(userData)
                                         .addOnSuccessListener {
                                             Toast.makeText(context, "Cuenta creada correctamente", Toast.LENGTH_SHORT).show()
-                                            navController.navigate("main") {
+                                            navController.navigate("login") {
                                                 popUpTo("create_account") { inclusive = true }
                                             }
                                         }

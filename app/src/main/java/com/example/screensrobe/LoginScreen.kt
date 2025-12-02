@@ -110,25 +110,24 @@ fun LoginScreen(navController: NavController) {
                             return@Button
                         }
 
-                        // Login con Firebase Auth
                         auth.signInWithEmailAndPassword(email, password)
                             .addOnSuccessListener { result ->
                                 val userId = result.user?.uid
                                 if (userId != null) {
-                                    // Verificar que exista el documento en "usuarios"
-                                    db.collection("usuarios").document(userId).get()
+                                    db.collection("users").document(userId).get()
                                         .addOnSuccessListener { doc ->
                                             if (doc.exists()) {
+                                                val isCompany = doc.getBoolean("isCompany") ?: false
                                                 navController.navigate("main") {
                                                     popUpTo("login") { inclusive = true }
                                                 }
                                             } else {
-                                                Toast.makeText(context, "Cuenta de usuario no registrada", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(context, "Cuenta no registrada", Toast.LENGTH_SHORT).show()
                                                 auth.signOut()
                                             }
                                         }
                                         .addOnFailureListener { e ->
-                                            Toast.makeText(context, "Error al verificar usuario: ${e.message}", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
                                         }
                                 } else {
                                     Toast.makeText(context, "Error de autenticación", Toast.LENGTH_SHORT).show()
@@ -148,16 +147,16 @@ fun LoginScreen(navController: NavController) {
                 }
 
                 // Olvidó contraseña
-                TextButton(onClick = { /* TODO */ }) {
+                TextButton(onClick = { /* TODO: recuperar contraseña */ }) {
                     Text("¿Olvidaste la contraseña?", fontSize = 13.sp, color = Color.Gray)
                 }
 
-                // Crear cuenta normal
+                // Crear cuenta usuario
                 Row(horizontalArrangement = Arrangement.Center) {
                     Text("¿No tienes cuenta? ", fontSize = 13.sp, color = Color.Gray)
                     ClickableText(
                         text = AnnotatedString("Regístrate"),
-                        onClick = { navController.navigate("create_account") },
+                        onClick = { navController.navigate(Routes.CREATE_ACCOUNT) },
                         style = LocalTextStyle.current.copy(
                             color = Color(0xFFFF9800),
                             fontSize = 13.sp,
@@ -169,7 +168,7 @@ fun LoginScreen(navController: NavController) {
                 // Crear cuenta empresa
                 ClickableText(
                     text = AnnotatedString("Registrarse como empresa"),
-                    onClick = { navController.navigate("createcompany") },
+                    onClick = { navController.navigate(Routes.CREATE_COMPANY) },
                     style = LocalTextStyle.current.copy(
                         color = Color.Black,
                         fontSize = 13.sp

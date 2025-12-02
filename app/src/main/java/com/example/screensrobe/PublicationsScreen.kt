@@ -8,17 +8,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
@@ -27,187 +23,191 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
+import com.example.screensrobe.R
 
-data class Post(val userName: String, val content: String, val profilePic: Int)
+data class Post(
+    val userId: String = "",
+    val userName: String = "",
+    val content: String = "",
+    val profileImage: String? = null
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PostScreen(navController: NavController, modifier: Modifier = Modifier) {
-    val posts = listOf(
-        Post("Roberto", "Hoy iniciamos con la campaña de apoyo 💚", R.drawable.gojo),
-        Post("Maria", "Agradezco a todos por su colaboración 🙌", R.drawable.gojo),
-        Post("Carlos", "Donamos más de 100 alimentos esta semana 🍎", R.drawable.gojo)
-    )
+fun PostScreen(navController: NavController) {
 
-    // Estados del campo de texto
+    val db = FirebaseFirestore.getInstance()
+    val currentUser = FirebaseAuth.getInstance().currentUser
+    val posts = remember { mutableStateListOf<Post>() }
+
     var thinkingText by remember { mutableStateOf(TextFieldValue("")) }
     var isWriting by remember { mutableStateOf(false) }
 
-    val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
+    // Cargar posts en tiempo real
+    LaunchedEffect(true) {
+        db.collection("posts")
+            .orderBy("timestamp", Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshot, _ ->
+                posts.clear()
+                if (snapshot != null && snapshot.documents.isNotEmpty()) {
+                    for (doc in snapshot.documents) {
+                        posts.add(
+                            Post(
+                                userId = doc.getString("userId") ?: "",
+                                userName = doc.getString("userName") ?: "Usuario",
+                                content = doc.getString("content") ?: "",
+                                profileImage = doc.getString("profileImage")
+                            )
+                        )
+                    }
+                }
+            }
+    }
+
     Scaffold(
         topBar = {
-            Surface(
-                color = Color(0xFFE5D8D8),
-                shadowElevation = 4.dp
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    // Foto de perfil o logo
-                    IconButton(onClick = { navController.navigate("profile")}) {
+            TopAppBar(
+                title = { Text("Publicaciones", fontSize = 22.sp, fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = { navController.navigateUp() }) {
                         Icon(
                             painter = painterResource(id = R.drawable.gojo),
-                            contentDescription = "Perfil",
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape),
+                            contentDescription = "Volver",
+                            modifier = Modifier.size(40.dp).clip(CircleShape),
                             tint = Color.Unspecified
                         )
                     }
-
-                    // Título
-                    Text(
-                        text = "Publicaciones",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black,
-                            fontSize = 22.sp
-                        )
-                    )
-
-                    MenuDesplegable(navController)
-                }
-            }
+                },
+                colors = TopAppBarDefaults.largeTopAppBarColors(containerColor = Color(0xFFE5D8D8))
+            )
         },
-        containerColor = Color(0xFFFDFDFD)
+        containerColor = Color(0xFFF4F2EB)
     ) { padding ->
-        Box(
+
+        Column(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+            // Campo para crear publicación
+            Card(
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFF8D6A0)),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                // Botón de publicar
                 Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .padding(12.dp)
+                        .fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Button(
-                        onClick = {
-                            if (thinkingText.text.isNotBlank()) {
-                                thinkingText = TextFieldValue("")
-                                isWriting = false
-                                keyboardController?.hide()
-                                focusManager.clearFocus()
-                            }
-                        },
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3E9E8F))
-                    ) {
-                        Text("Publicar", fontWeight = FontWeight.Bold)
-                    }
-                }
-
-                // Card del pensamiento
-                Card(
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF8D6A0)),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .padding(12.dp)
-                            .fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    val profilePic = currentUser?.photoUrl?.toString()
+                    if (profilePic != null) {
+                        AsyncImage(
+                            model = profilePic,
+                            contentDescription = "Perfil",
+                            modifier = Modifier.size(45.dp).clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
                         Image(
                             painter = painterResource(id = R.drawable.gojo),
-                            contentDescription = "Foto de perfil",
-                            modifier = Modifier
-                                .size(45.dp)
-                                .clip(CircleShape)
+                            contentDescription = "Perfil",
+                            modifier = Modifier.size(45.dp).clip(CircleShape),
+                            contentScale = ContentScale.Crop
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                    }
 
-                        if (!isWriting) {
-                            // Texto clickable
-                            Text(
-                                text = "¿Qué está pensando?",
-                                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 17.sp),
-                                modifier = Modifier
-                                    .clickable {
-                                        isWriting = true
-                                        focusRequester.requestFocus()
-                                        keyboardController?.show()
-                                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    if (!isWriting) {
+                        Text(
+                            text = "¿Qué está pensando?",
+                            fontSize = 17.sp,
+                            modifier = Modifier.clickable {
+                                isWriting = true
+                                keyboardController?.show()
+                            }
+                        )
+                    } else {
+                        TextField(
+                            value = thinkingText,
+                            onValueChange = { thinkingText = it },
+                            placeholder = { Text("Escribe algo...") },
+                            modifier = Modifier.weight(1f),
+                            maxLines = 3,
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent
                             )
-                        } else {
-                            // Campo de texto editable
-                            TextField(
-                                value = thinkingText,
-                                onValueChange = { thinkingText = it },
-                                placeholder = { Text("Escribe algo...") },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .focusRequester(focusRequester),
-                                maxLines = 3,
-                                colors = TextFieldDefaults.colors(
-                                    focusedContainerColor = Color.Transparent,
-                                    unfocusedContainerColor = Color.Transparent,
-                                    disabledContainerColor = Color.Transparent,
-                                    focusedIndicatorColor = Color.Transparent,
-                                    unfocusedIndicatorColor = Color.Transparent
-                                )
-                            )
+                        )
+                    }
+                }
+            }
+
+            // Botón publicar
+            Button(
+                onClick = {
+                    if (!thinkingText.text.isBlank() && currentUser != null) {
+                        val post = hashMapOf(
+                            "userId" to currentUser.uid,
+                            "userName" to (currentUser.displayName ?: currentUser.email ?: "Usuario"),
+                            "profileImage" to (currentUser.photoUrl?.toString() ?: ""),
+                            "content" to thinkingText.text,
+                            "timestamp" to System.currentTimeMillis()
+                        )
+                        db.collection("posts").add(post).addOnSuccessListener {
+                            thinkingText = TextFieldValue("")
+                            isWriting = false
+                            keyboardController?.hide()
+                            focusManager.clearFocus()
+                            // Redirigir a main
+                            navController.navigate("main") {
+                                popUpTo("posts") { inclusive = true }
+                            }
                         }
                     }
-                }
+                },
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3E9E8F))
+            ) {
+                Text("Publicar", color = Color.White)
+            }
 
-                // Iconos inferiores
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(20.dp),
-                    modifier = Modifier.fillMaxWidth()
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Lista de publicaciones o placeholder
+            if (posts.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = 40.dp),
+                    contentAlignment = Alignment.TopCenter
                 ) {
-                    IconButton(onClick = { navController.navigate("main")}) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.galeria),
-                            contentDescription = "Archivo",
-                            tint = Color.Unspecified
-                        )
-                    }
-                    IconButton(onClick = { /* TODO agregar GIF */ }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.gif),
-                            contentDescription = "GIF",
-                            tint = Color.Unspecified
-                        )
-                    }
+                    Text(
+                        text = "Aún no hay publicaciones",
+                        fontSize = 16.sp,
+                        color = Color.Gray
+                    )
                 }
-
-                // Lista de publicaciones
-                Text(
-                    text = "Últimas publicaciones",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-                )
-
+            } else {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    items(posts) { post ->
+                    items(posts.filter { it.content.isNotBlank() }) { post -> // ❌ filtrar posts vacíos
                         Card(
                             shape = RoundedCornerShape(16.dp),
                             colors = CardDefaults.cardColors(containerColor = Color(0xFFF8D6A0)),
@@ -215,19 +215,26 @@ fun PostScreen(navController: NavController, modifier: Modifier = Modifier) {
                         ) {
                             Column(modifier = Modifier.padding(12.dp)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Image(
-                                        painter = painterResource(id = post.profilePic),
-                                        contentDescription = "Perfil",
-                                        modifier = Modifier
-                                            .size(40.dp)
-                                            .clip(CircleShape)
-                                    )
+                                    if (!post.profileImage.isNullOrEmpty()) {
+                                        AsyncImage(
+                                            model = post.profileImage,
+                                            contentDescription = "Perfil",
+                                            modifier = Modifier.size(40.dp).clip(CircleShape),
+                                            contentScale = ContentScale.Crop
+                                        )
+                                    } else {
+                                        Image(
+                                            painter = painterResource(id = R.drawable.gojo),
+                                            contentDescription = "Perfil",
+                                            modifier = Modifier.size(40.dp).clip(CircleShape),
+                                            contentScale = ContentScale.Crop
+                                        )
+                                    }
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
                                         text = post.userName,
-                                        style = MaterialTheme.typography.bodyLarge.copy(
-                                            fontWeight = FontWeight.Bold
-                                        )
+                                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                                        fontSize = 16.sp
                                     )
                                 }
                                 Spacer(modifier = Modifier.height(6.dp))
@@ -240,4 +247,3 @@ fun PostScreen(navController: NavController, modifier: Modifier = Modifier) {
         }
     }
 }
-

@@ -1,14 +1,10 @@
 package com.example.screensrobe
 
+import HomeScreen
 import TrendsScreen
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 
@@ -26,12 +22,10 @@ fun MainScreen(navController: NavController) {
         }
     ) { innerPadding ->
         when (selectedItem) {
-            0 -> HomeScreen(navController, modifier = Modifier.padding(innerPadding)) //
+            0 -> HomeScreen(navController, modifier = Modifier.padding(innerPadding))
             1 -> TrendsScreen(navController, modifier = Modifier.padding(innerPadding))
             2 -> CommunityScreen(navController, modifier = Modifier.padding(innerPadding))
             3 -> MensajeDirectoScreen(navController, modifier = Modifier.padding(innerPadding))
         }
     }
 }
-
-

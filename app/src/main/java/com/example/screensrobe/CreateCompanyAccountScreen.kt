@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.example.screensrobe.R
 
 // VisualTransformation para formato dd/MM/yyyy
 class DateVisualTransformation2 : VisualTransformation {
@@ -198,13 +199,13 @@ fun CreateCompanyAccountScreen(navController: NavController) {
                                         "tipoDonaciones" to donationType,
                                         "fechaFundacion" to date,
                                         "email" to email,
-                                        "tipo" to "empresa"
+                                        "isCompany" to true
                                     )
-                                    db.collection("empresas").document(uid).set(companyData)
+                                    db.collection("users").document(uid).set(companyData)
                                         .addOnSuccessListener {
                                             Toast.makeText(context, "Cuenta creada correctamente", Toast.LENGTH_SHORT).show()
-                                            navController.navigate("main") {
-                                                popUpTo("createcompany") { inclusive = true }
+                                            navController.navigate(Routes.MAIN) {
+                                                popUpTo(Routes.CREATE_COMPANY) { inclusive = true }
                                             }
                                         }
                                         .addOnFailureListener { e ->
