@@ -98,8 +98,7 @@ fun PostScreen(navController: NavController) {
         topBar = {
             TopAppBar(
                 title = { Text("Publicaciones", fontSize = 22.sp, fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                },
+                navigationIcon = {},
                 colors = TopAppBarDefaults.largeTopAppBarColors(containerColor = Color(0xFFE5D8D8))
             )
         },
@@ -215,13 +214,18 @@ fun PostScreen(navController: NavController) {
                             ) {
                                 Column(modifier = Modifier.padding(12.dp)) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
+
+                                        // FOTO CLICKEABLE
                                         if (!post.profilePicUrl.isNullOrEmpty()) {
                                             AsyncImage(
                                                 model = post.profilePicUrl,
                                                 contentDescription = "Perfil",
                                                 modifier = Modifier
                                                     .size(40.dp)
-                                                    .clip(CircleShape),
+                                                    .clip(CircleShape)
+                                                    .clickable {
+                                                        navController.navigate("profile/${post.userId}/false")
+                                                    },
                                                 contentScale = ContentScale.Crop,
                                                 placeholder = painterResource(id = R.drawable.gojo),
                                                 error = painterResource(id = R.drawable.gojo)
@@ -232,17 +236,24 @@ fun PostScreen(navController: NavController) {
                                                 contentDescription = "Perfil",
                                                 modifier = Modifier
                                                     .size(40.dp)
-                                                    .clip(CircleShape),
+                                                    .clip(CircleShape)
+                                                    .clickable {
+                                                        navController.navigate("profile/${post.userId}/false")
+                                                    },
                                                 contentScale = ContentScale.Crop
                                             )
                                         }
 
                                         Spacer(modifier = Modifier.width(8.dp))
 
+                                        // NOMBRE CLICKEABLE
                                         Text(
                                             post.userName,
                                             fontSize = 16.sp,
-                                            fontWeight = FontWeight.Bold
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.clickable {
+                                                navController.navigate("profile/${post.userId}/false")
+                                            }
                                         )
                                     }
 
@@ -260,7 +271,6 @@ fun PostScreen(navController: NavController) {
 }
 
 // PLACEHOLDER SHIMMER
-
 @Composable
 fun ShimmerPostCard2() {
     Card(

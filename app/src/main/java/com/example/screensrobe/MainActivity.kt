@@ -23,11 +23,12 @@ object Routes {
     const val CONFIG = "conf"
     const val MAIN = "main"
     const val LOADING = "loading"
-    const val  OPINION = "opinion"
+    const val OPINION = "opinion"
     const val METHOD = "method"
     const val PAYMENT = "payment"
 
-
+    const val donaciones = "donaciones"
+    const val DONACIONES_FISICAS = "donaciones_fisicas/{userId}"
 }
 
 class MainActivity : ComponentActivity() {
@@ -37,7 +38,11 @@ class MainActivity : ComponentActivity() {
             ScreensrobeTheme {
                 val navController = rememberNavController()
 
-                NavHost(navController = navController, startDestination = Routes.SPLASH) {
+                NavHost(
+                    navController = navController,
+                    startDestination = Routes.SPLASH
+                ) {
+
                     // Splash screen
                     composable(Routes.SPLASH) { SplashScreen(navController) }
                     composable(Routes.LOADING) { LoadingCardsScreen(navController) }
@@ -45,8 +50,9 @@ class MainActivity : ComponentActivity() {
                     composable(Routes.CREATE_ACCOUNT) { CreateAccountScreen(navController) }
                     composable(Routes.CREATE_COMPANY) { CreateCompanyAccountScreen(navController) }
                     composable(Routes.LOGIN_ENTERPRISE) { LoginEnterprise(navController) }
+
                     composable(
-                        "profile/{userId}/{isCompany}",
+                        route = "profile/{userId}/{isCompany}",
                         arguments = listOf(
                             navArgument("userId") { type = NavType.StringType },
                             navArgument("isCompany") { type = NavType.BoolType }
@@ -54,15 +60,31 @@ class MainActivity : ComponentActivity() {
                     ) { backStackEntry ->
                         val userId = backStackEntry.arguments?.getString("userId") ?: ""
                         val isCompany = backStackEntry.arguments?.getBoolean("isCompany") ?: false
-                        ProfileScreen(userId = userId, navController = navController, isCompany = isCompany)
+                        ProfileScreen(
+                            userId = userId,
+                            navController = navController,
+                            isCompany = isCompany
+                        )
                     }
+
                     composable(Routes.PUBLIC) { PostScreen(navController) }
                     composable(Routes.HELP) { AyudaScreen(navController) }
                     composable(Routes.CONFIG) { ConfiguracionScreen(navController) }
-                    composable(Routes.OPINION) {OpinionesScreen(navController) }
+                    composable(Routes.OPINION) { OpinionesScreen(navController) }
                     composable(Routes.MAIN) { MainScreen(navController) }
                     composable(Routes.METHOD) { PaymentmethodScreen(navController) }
                     composable(Routes.PAYMENT) { PaymentverificationScreen(navController) }
+
+                    // DONACIONES FÍSICAS
+                    composable(
+                        route = Routes.DONACIONES_FISICAS,
+                        arguments = listOf(
+                            navArgument("userId") { type = NavType.StringType }
+                        )
+                    ) {
+                        DonacionInfoScreen(navController = navController)
+
+                    }
                 }
             }
         }

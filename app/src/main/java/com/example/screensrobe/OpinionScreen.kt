@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -29,6 +30,9 @@ fun OpinionesScreen(navController: NavHostController) {
     var rating by remember { mutableStateOf(0) }
     var guardado by remember { mutableStateOf(false) }
 
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+
     Scaffold(
         topBar = {
             Surface(
@@ -42,7 +46,6 @@ fun OpinionesScreen(navController: NavHostController) {
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
@@ -62,103 +65,206 @@ fun OpinionesScreen(navController: NavHostController) {
 
                     Spacer(modifier = Modifier.weight(1f))
 
-                    MenuDesplegable(navController)   // 👈 YA FUNCIONA
+                    MenuDesplegable(navController)
                 }
             }
         },
         containerColor = Color(0xFFF4F2EB)
     ) { padding ->
 
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Text(
-                text = "¡Qué gusto saber de ti! ¿Qué tal te la estás pasando?",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Box(
-                modifier = Modifier
-                    .size(180.dp)
-                    .background(Color(0xFFFFF3D3), CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.dante),
-                    contentDescription = "Imagen",
-                    modifier = Modifier
-                        .size(150.dp)
-                        .clip(CircleShape)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Text(
-                text = "Por favor, comparte con nosotros qué te parece la aplicación",
-                fontSize = 18.sp,
-                textAlign = TextAlign.Center,
-                fontWeight = FontWeight.Medium
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Estrellas
+        if (isLandscape) {
+            // ---------------------------
+            // 🌟 MODO HORIZONTAL (Landscape)
+            // ---------------------------
             Row(
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize()
+                    .padding(24.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                for (i in 1..5) {
-                    Icon(
-                        painter = painterResource(
-                            id = if (i <= rating) R.drawable.ic_star_24 else R.drawable.ic_star_outline
-                        ),
-                        contentDescription = "Estrella $i",
+
+                // Imagen a la izquierda
+                Box(
+                    modifier = Modifier
+                        .size(220.dp)
+                        .background(Color(0xFFFFF3D3), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.dante),
+                        contentDescription = "Imagen",
                         modifier = Modifier
-                            .size(42.dp)
-                            .clickable { rating = i },
-                        tint = Color.Unspecified
+                            .size(180.dp)
+                            .clip(CircleShape)
                     )
+                }
+
+                Spacer(modifier = Modifier.width(30.dp))
+
+                // Texto + estrellas + botón a la derecha
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+
+                    Text(
+                        text = "¡Qué gusto saber de ti! ¿Qué tal te la estás pasando?",
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Text(
+                        text = "Por favor, comparte con nosotros qué te parece la aplicación",
+                        fontSize = 18.sp,
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.Medium
+                    )
+
+                    Spacer(modifier = Modifier.height(26.dp))
+
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        for (i in 1..5) {
+                            Icon(
+                                painter = painterResource(
+                                    id = if (i <= rating) R.drawable.ic_star_24 else R.drawable.ic_star_outline
+                                ),
+                                contentDescription = "Estrella $i",
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clickable { rating = i },
+                                tint = Color.Unspecified
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(26.dp))
+
+                    Button(
+                        onClick = {
+                            val data = hashMapOf(
+                                "estrellas" to rating,
+                                "fecha" to System.currentTimeMillis()
+                            )
+
+                            db.collection("opiniones")
+                                .add(data)
+                                .addOnSuccessListener { guardado = true }
+                                .addOnFailureListener { guardado = false }
+                        },
+                        enabled = rating > 0,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3E9E8F))
+                    ) {
+                        Text("Enviar calificación")
+                    }
+
+                    if (guardado) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("¡Gracias por tu opinión! ❤️", color = Color(0xFF4CAF50))
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(30.dp))
-
-            Button(
-                onClick = {
-                    val data = hashMapOf(
-                        "estrellas" to rating,
-                        "fecha" to System.currentTimeMillis()
-                    )
-
-                    db.collection("opiniones")
-                        .add(data)
-                        .addOnSuccessListener { guardado = true }
-                        .addOnFailureListener { guardado = false }
-                },
-                enabled = rating > 0,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF3E9E8F)
-                )
+        } else {
+            // ---------------------------
+            // 🌟 MODO VERTICAL (Portrait)
+            // ---------------------------
+            Column(
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Enviar calificación")
-            }
 
-            if (guardado) {
-                Spacer(modifier = Modifier.height(20.dp))
-                Text("¡Gracias por tu opinión! ❤️", color = Color(0xFF4CAF50))
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Text(
+                    text = "¡Qué gusto saber de ti! ¿Qué tal te la estás pasando?",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Box(
+                    modifier = Modifier
+                        .size(180.dp)
+                        .background(Color(0xFFFFF3D3), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.dante),
+                        contentDescription = "Imagen",
+                        modifier = Modifier
+                            .size(150.dp)
+                            .clip(CircleShape)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Text(
+                    text = "Por favor, comparte con nosotros qué te parece la aplicación",
+                    fontSize = 18.sp,
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Medium
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    for (i in 1..5) {
+                        Icon(
+                            painter = painterResource(
+                                id = if (i <= rating) R.drawable.ic_star_24 else R.drawable.ic_star_outline
+                            ),
+                            contentDescription = "Estrella $i",
+                            modifier = Modifier
+                                .size(42.dp)
+                                .clickable { rating = i },
+                            tint = Color.Unspecified
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(30.dp))
+
+                Button(
+                    onClick = {
+                        val data = hashMapOf(
+                            "estrellas" to rating,
+                            "fecha" to System.currentTimeMillis()
+                        )
+
+                        db.collection("opiniones")
+                            .add(data)
+                            .addOnSuccessListener { guardado = true }
+                            .addOnFailureListener { guardado = false }
+                    },
+                    enabled = rating > 0,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3E9E8F))
+                ) {
+                    Text("Enviar calificación")
+                }
+
+                if (guardado) {
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Text("¡Gracias por tu opinión! ❤️", color = Color(0xFF4CAF50))
+                }
             }
         }
     }

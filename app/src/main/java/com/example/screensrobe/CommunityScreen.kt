@@ -2,12 +2,12 @@ package com.example.screensrobe
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 
@@ -56,10 +55,15 @@ fun CommunityScreen(navController: NavController, modifier: Modifier = Modifier)
                                 // ❗ Solo agregar si NO es empresa
                                 if (!isCompany) {
                                     val profileImage = userDoc.getString("profileImage")
+                                    // intento: usar userName del documento de usuario si existe, sino del post
+                                    val userNameFromUser = userDoc.getString("userName") ?: doc.getString("userName") ?: "Usuario"
+
                                     posts.add(
                                         CommunityPost(
-                                            userName = doc.getString("userName") ?: "Usuario",
+                                            userId = userId,
+                                            userName = userNameFromUser,
                                             content = doc.getString("content") ?: "",
+                                            isCompany = isCompany,
                                             profilePicUrl = profileImage,
                                             profilePic = R.drawable.gojo
                                         )
@@ -143,13 +147,20 @@ fun CommunityScreen(navController: NavController, modifier: Modifier = Modifier)
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
+
+                                // Acción para navegar al perfil
+                                val goToProfile = {
+                                    navController.navigate("profile/${post.userId}/${post.isCompany}")
+                                }
+
                                 if (!post.profilePicUrl.isNullOrEmpty()) {
                                     AsyncImage(
                                         model = post.profilePicUrl,
                                         contentDescription = "Perfil",
                                         modifier = Modifier
                                             .size(40.dp)
-                                            .clip(CircleShape),
+                                            .clip(CircleShape)
+                                            .clickable { goToProfile() },
                                         contentScale = ContentScale.Crop
                                     )
                                 } else {
@@ -158,7 +169,8 @@ fun CommunityScreen(navController: NavController, modifier: Modifier = Modifier)
                                         contentDescription = "Perfil",
                                         modifier = Modifier
                                             .size(40.dp)
-                                            .clip(CircleShape),
+                                            .clip(CircleShape)
+                                            .clickable { goToProfile() },
                                         contentScale = ContentScale.Crop
                                     )
                                 }
@@ -166,7 +178,8 @@ fun CommunityScreen(navController: NavController, modifier: Modifier = Modifier)
                                 Text(
                                     text = post.userName,
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp
+                                    fontSize = 16.sp,
+                                    modifier = Modifier.clickable { goToProfile() }
                                 )
                             }
 
@@ -184,10 +197,13 @@ fun CommunityScreen(navController: NavController, modifier: Modifier = Modifier)
     }
 }
 
-// MODELO actualizado para contener varias imágenes
+
+// MODELO actualizado para contener varias imágenes y más metadata opcional
 data class CommunityPost(
+    val userId: String,
     val userName: String,
     val content: String,
+    val isCompany: Boolean,
     val profilePicUrl: String? = null,
     val profilePic: Int
 )
