@@ -9,10 +9,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Whatsapp
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,27 +22,34 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun AyudaScreen(navController: NavController) {
+
+    val db = FirebaseFirestore.getInstance()
+    val auth = FirebaseAuth.getInstance()
+
+    var problema by remember { mutableStateOf("") }
+    var enviado by remember { mutableStateOf(false) }
+
     val context = LocalContext.current
 
     Scaffold(
         topBar = {
             Surface(
-                color = Color(0xFFF4F2EB),
+                color = Color(0xFFE5D8D8),
                 shadowElevation = 2.dp,
                 modifier = Modifier.statusBarsPadding()
-
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
@@ -54,12 +59,23 @@ fun AyudaScreen(navController: NavController) {
                         )
                     }
 
-                    MenuDesplegable(navController)
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    Text(
+                        text = "Ayuda",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    MenuDesplegable(navController)   // 👈 YA FUNCIONA
                 }
             }
         },
         containerColor = Color(0xFFF4F2EB)
     ) { padding ->
+
         Column(
             modifier = Modifier
                 .padding(padding)
@@ -68,6 +84,7 @@ fun AyudaScreen(navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+
             Text(
                 text = "¿En qué podemos ayudarte?",
                 fontSize = 18.sp,
@@ -75,7 +92,7 @@ fun AyudaScreen(navController: NavController) {
             )
 
             Image(
-                painter = painterResource(id = R.drawable.gojo),
+                painter = painterResource(id = R.drawable.perfil2),
                 contentDescription = "Soporte",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -84,34 +101,69 @@ fun AyudaScreen(navController: NavController) {
             )
 
             Text(
-                text = "Escribe tu problema:",
+                text = "Describe tu problema:",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold
             )
 
-            Box(
+            TextField(
+                value = problema,
+                onValueChange = {
+                    problema = it
+                    enviado = false
+                },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFFF3D3AC), RoundedCornerShape(12.dp))
-                    .padding(12.dp)
+                    .height(150.dp)
+                    .background(Color(0xFFF3D3AC), RoundedCornerShape(12.dp)),
+                placeholder = { Text("Escribe tu problema aquí...") }
+            )
+
+            Button(
+                onClick = {
+                    val user = auth.currentUser
+
+                    val reporte = hashMapOf(
+                        "problema" to problema,
+                        "userId" to (user?.uid ?: "sin_id"),
+                        "correo" to (user?.email ?: "sin_correo"),
+                        "timestamp" to System.currentTimeMillis()
+                    )
+
+                    db.collection("reportesAyuda")
+                        .add(reporte)
+                        .addOnSuccessListener {
+                            problema = ""
+                            enviado = true
+                        }
+                        .addOnFailureListener { enviado = false }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF3E9E8F)
+                ),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Las personas podrán escribir su problema")
+                Text("Enviar reporte")
+            }
+
+            if (enviado) {
+                Text(
+                    text = "¡Gracias! Tu reporte ha sido enviado 💚",
+                    color = Color(0xFF4CAF50),
+                    fontWeight = FontWeight.SemiBold
+                )
             }
 
             Text(
-                text = "También puedes contactarnos por WhatsApp en caso de que tardemos mucho",
+                text = "Si tardamos mucho, escríbenos por WhatsApp:",
                 fontSize = 14.sp,
                 color = Color.Black
             )
 
             IconButton(
                 onClick = {
-                    val phone = "524493897227"  // ← pon el número con lada (México = 52)
-                    val message = "Hola, necesito ayuda"
-                    val url = "https://wa.me/$phone?text=${Uri.encode(message)}"
-
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                    context.startActivity(intent)
+                    val url = "https://wa.me/524493897227?text=${Uri.encode("Hola, necesito ayuda")}"
+                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
                 },
                 modifier = Modifier
                     .size(56.dp)

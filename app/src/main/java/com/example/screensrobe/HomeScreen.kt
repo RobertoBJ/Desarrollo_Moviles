@@ -6,6 +6,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -18,9 +19,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -34,12 +35,13 @@ import com.google.firebase.firestore.Query
 import com.example.screensrobe.MenuDesplegable
 import com.example.screensrobe.R
 
-
 data class HomePost(
+    val userId: String,
     val userName: String,
     val content: String,
     val profilePicUrl: String? = null
 )
+
 @Composable
 fun HomeScreen(navController: NavController, modifier: Modifier = Modifier) {
 
@@ -93,6 +95,7 @@ fun HomeScreen(navController: NavController, modifier: Modifier = Modifier) {
                                     val profileImage = userDoc.getString("profileImage")
                                     posts.add(
                                         HomePost(
+                                            userId = uid,
                                             userName = userName,
                                             content = content,
                                             profilePicUrl = profileImage
@@ -236,11 +239,18 @@ fun HomeScreen(navController: NavController, modifier: Modifier = Modifier) {
                                                 contentScale = ContentScale.Crop
                                             )
                                         }
+
                                         Spacer(modifier = Modifier.width(8.dp))
+
+                                        // Nombre de usuario clicable
                                         Text(
                                             text = post.userName,
                                             fontWeight = FontWeight.Bold,
-                                            fontSize = 16.sp
+                                            fontSize = 16.sp,
+                                            modifier = Modifier.clickable {
+                                                // Navegar al perfil del usuario
+                                                navController.navigate("profile/${post.userId}/false")
+                                            }
                                         )
                                     }
 

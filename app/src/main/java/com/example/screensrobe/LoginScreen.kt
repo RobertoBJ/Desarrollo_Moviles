@@ -117,10 +117,25 @@ fun LoginScreen(navController: NavController) {
                                     db.collection("users").document(userId).get()
                                         .addOnSuccessListener { doc ->
                                             if (doc.exists()) {
+
                                                 val isCompany = doc.getBoolean("isCompany") ?: false
-                                                navController.navigate("main") {
+
+                                                if (isCompany) {
+                                                    // Empresa intentando entrar aquí
+                                                    Toast.makeText(
+                                                        context,
+                                                        "Esta cuenta no esta registrada como usuario",
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                    auth.signOut()
+                                                    return@addOnSuccessListener
+                                                }
+
+                                                //Usuario normal → permitir acceso
+                                                navController.navigate(Routes.MAIN) {
                                                     popUpTo("login") { inclusive = true }
                                                 }
+
                                             } else {
                                                 Toast.makeText(context, "Cuenta no registrada", Toast.LENGTH_SHORT).show()
                                                 auth.signOut()
@@ -146,10 +161,11 @@ fun LoginScreen(navController: NavController) {
                     Text("Iniciar sesión", fontSize = 17.sp, fontWeight = FontWeight.Bold)
                 }
 
+
                 // Olvidó contraseña
-                TextButton(onClick = { /* TODO: recuperar contraseña */ }) {
-                    Text("¿Olvidaste la contraseña?", fontSize = 13.sp, color = Color.Gray)
-                }
+                //TextButton(onClick = { /* TODO: recuperar contraseña */ }) {
+                //    Text("¿Olvidaste la contraseña?", fontSize = 13.sp, color = Color.Gray)
+                // }
 
                 // Crear cuenta usuario
                 Row(horizontalArrangement = Arrangement.Center) {
@@ -178,7 +194,7 @@ fun LoginScreen(navController: NavController) {
                 // Login empresa
                 ClickableText(
                     text = AnnotatedString("Iniciar sesión como empresa"),
-                    onClick = { navController.navigate("loginenterprise") },
+                    onClick = { navController.navigate(Routes.LOGIN_ENTERPRISE) },
                     style = LocalTextStyle.current.copy(
                         color = Color.Black,
                         fontSize = 14.sp,

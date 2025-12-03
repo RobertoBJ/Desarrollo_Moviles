@@ -33,7 +33,8 @@ data class Post(
     val userId: String = "",
     val userName: String = "",
     val content: String = "",
-    val profileImage: String? = null
+    val profilePicUrl: String? = null,
+    val profilePic: Int
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,23 +53,41 @@ fun PostScreen(navController: NavController) {
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    // 🔥 Cargar todas las publicaciones en tiempo real
+    //Cargar todas las publicaciones en tiempo real
     LaunchedEffect(true) {
         postsLoading = true
-        db.collection("posts")
+        val firestore = FirebaseFirestore.getInstance()
+        firestore.collection("posts")
             .orderBy("timestamp", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, _ ->
                 posts.clear()
-                if (snapshot != null && snapshot.documents.isNotEmpty()) {
+                if (snapshot != null) {
                     for (doc in snapshot.documents) {
-                        posts.add(
-                            Post(
-                                userId = doc.getString("userId") ?: "",
-                                userName = doc.getString("userName") ?: "Usuario",
-                                content = doc.getString("content") ?: "",
-                                profileImage = doc.getString("profileImage")
-                            )
-                        )
+                        val userId = doc.getString("userId") ?: continue
+                        val userName = doc.getString("userName") ?: "Usuario"
+                        val content = doc.getString("content") ?: ""
+
+                        // Traer datos del usuario
+                        firestore.collection("users")
+                            .document(userId)
+                            .get()
+                            .addOnSuccessListener { userDoc ->
+                                val profileImage = userDoc.getString("profileImage") ?: ""
+                                val isCompany = userDoc.getBoolean("isCompany") ?: false
+
+                                // Solo si no es empresa
+                                if (!isCompany) {
+                                    posts.add(
+                                        Post(
+                                            userId = userId,
+                                            userName = userName,
+                                            content = content,
+                                            profilePicUrl = profileImage,
+                                            profilePic = R.drawable.gojo
+                                        )
+                                    )
+                                }
+                            }
                     }
                 }
                 postsLoading = false
@@ -80,14 +99,6 @@ fun PostScreen(navController: NavController) {
             TopAppBar(
                 title = { Text("Publicaciones", fontSize = 22.sp, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.gojo),
-                            contentDescription = "Volver",
-                            modifier = Modifier.size(40.dp).clip(CircleShape),
-                            tint = Color.Unspecified
-                        )
-                    }
                 },
                 colors = TopAppBarDefaults.largeTopAppBarColors(containerColor = Color(0xFFE5D8D8))
             )
@@ -103,9 +114,7 @@ fun PostScreen(navController: NavController) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            // ───────────────────────────────────────────────
-            // 📌 Campo para crear publicación
-            // ───────────────────────────────────────────────
+            //Campo para crear publicación
             Card(
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFFF8D6A0)),
@@ -115,23 +124,6 @@ fun PostScreen(navController: NavController) {
                     modifier = Modifier.padding(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-
-                    val profilePic = currentUser?.photoUrl?.toString()
-                    if (!profilePic.isNullOrEmpty()) {
-                        AsyncImage(
-                            model = profilePic,
-                            contentDescription = "Perfil",
-                            modifier = Modifier.size(45.dp).clip(CircleShape),
-                            contentScale = ContentScale.Crop
-                        )
-                    } else {
-                        Image(
-                            painter = painterResource(id = R.drawable.gojo),
-                            contentDescription = "Perfil",
-                            modifier = Modifier.size(45.dp).clip(CircleShape),
-                            contentScale = ContentScale.Crop
-                        )
-                    }
 
                     Spacer(modifier = Modifier.width(8.dp))
 
@@ -168,7 +160,7 @@ fun PostScreen(navController: NavController) {
                     if (thinkingText.text.isNotBlank() && currentUser != null) {
                         val post = hashMapOf(
                             "userId" to currentUser.uid,
-                            "userName" to (currentUser.displayName ?: "Usuario"),
+                            "userName" to (currentUser.email ?: "Usuario"),
                             "profileImage" to (currentUser.photoUrl?.toString() ?: ""),
                             "content" to thinkingText.text,
                             "timestamp" to System.currentTimeMillis()
@@ -180,6 +172,7 @@ fun PostScreen(navController: NavController) {
                         isWriting = false
                         keyboardController?.hide()
                         focusManager.clearFocus()
+                        navController.navigate(Routes.MAIN)
                     }
                 },
                 shape = RoundedCornerShape(12.dp),
@@ -188,9 +181,9 @@ fun PostScreen(navController: NavController) {
                 Text("Publicar", color = Color.White)
             }
 
-            // ───────────────────────────────────────────────
-            // 📌 Histórico de publicaciones (nuevo)
-            // ───────────────────────────────────────────────
+            val currentUser = FirebaseAuth.getInstance().currentUser
+            val userPosts = posts.filter { it.userId == currentUser?.uid }
+
             Text(
                 "Historial de publicaciones",
                 fontSize = 20.sp,
@@ -204,8 +197,8 @@ fun PostScreen(navController: NavController) {
                     repeat(3) { ShimmerPostCard2() }
                 }
 
-                posts.isEmpty() -> {
-                    Text("No hay publicaciones", color = Color.Gray)
+                userPosts.isEmpty() -> {
+                    Text("No tienes publicaciones", color = Color.Gray)
                 }
 
                 else -> {
@@ -213,7 +206,7 @@ fun PostScreen(navController: NavController) {
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                         modifier = Modifier.fillMaxHeight()
                     ) {
-                        items(posts) { post ->
+                        items(userPosts) { post ->
 
                             Card(
                                 shape = RoundedCornerShape(16.dp),
@@ -221,21 +214,26 @@ fun PostScreen(navController: NavController) {
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Column(modifier = Modifier.padding(12.dp)) {
-
                                     Row(verticalAlignment = Alignment.CenterVertically) {
-
-                                        if (!post.profileImage.isNullOrEmpty()) {
+                                        if (!post.profilePicUrl.isNullOrEmpty()) {
                                             AsyncImage(
-                                                model = post.profileImage,
+                                                model = post.profilePicUrl,
                                                 contentDescription = "Perfil",
-                                                modifier = Modifier.size(40.dp).clip(CircleShape),
-                                                contentScale = ContentScale.Crop
+                                                modifier = Modifier
+                                                    .size(40.dp)
+                                                    .clip(CircleShape),
+                                                contentScale = ContentScale.Crop,
+                                                placeholder = painterResource(id = R.drawable.gojo),
+                                                error = painterResource(id = R.drawable.gojo)
                                             )
                                         } else {
                                             Image(
                                                 painter = painterResource(id = R.drawable.gojo),
                                                 contentDescription = "Perfil",
-                                                modifier = Modifier.size(40.dp).clip(CircleShape)
+                                                modifier = Modifier
+                                                    .size(40.dp)
+                                                    .clip(CircleShape),
+                                                contentScale = ContentScale.Crop
                                             )
                                         }
 
@@ -261,10 +259,8 @@ fun PostScreen(navController: NavController) {
     }
 }
 
+// PLACEHOLDER SHIMMER
 
-// ───────────────────────────────────────────────
-// ⭐ PLACEHOLDER SHIMMER
-// ───────────────────────────────────────────────
 @Composable
 fun ShimmerPostCard2() {
     Card(

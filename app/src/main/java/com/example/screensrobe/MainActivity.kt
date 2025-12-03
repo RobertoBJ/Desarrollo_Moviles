@@ -1,6 +1,5 @@
 package com.example.screensrobe
 
-
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -13,6 +12,7 @@ import com.example.screensrobe.ui.theme.ScreensrobeTheme
 
 // Definir rutas fuera de MainActivity
 object Routes {
+    const val SPLASH = "splash"
     const val LOGIN = "login"
     const val CREATE_ACCOUNT = "create_account"
     const val CREATE_COMPANY = "create_company"
@@ -22,6 +22,12 @@ object Routes {
     const val HELP = "help"
     const val CONFIG = "conf"
     const val MAIN = "main"
+    const val LOADING = "loading"
+    const val  OPINION = "opinion"
+    const val METHOD = "method"
+    const val PAYMENT = "payment"
+
+
 }
 
 class MainActivity : ComponentActivity() {
@@ -30,7 +36,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             ScreensrobeTheme {
                 val navController = rememberNavController()
-                NavHost(navController = navController, startDestination = Routes.LOGIN) {
+
+                NavHost(navController = navController, startDestination = Routes.SPLASH) {
+                    // Splash screen
+                    composable(Routes.SPLASH) { SplashScreen(navController) }
+                    composable(Routes.LOADING) { LoadingCardsScreen(navController) }
                     composable(Routes.LOGIN) { LoginScreen(navController) }
                     composable(Routes.CREATE_ACCOUNT) { CreateAccountScreen(navController) }
                     composable(Routes.CREATE_COMPANY) { CreateCompanyAccountScreen(navController) }
@@ -49,7 +59,10 @@ class MainActivity : ComponentActivity() {
                     composable(Routes.PUBLIC) { PostScreen(navController) }
                     composable(Routes.HELP) { AyudaScreen(navController) }
                     composable(Routes.CONFIG) { ConfiguracionScreen(navController) }
+                    composable(Routes.OPINION) {OpinionesScreen(navController) }
                     composable(Routes.MAIN) { MainScreen(navController) }
+                    composable(Routes.METHOD) { PaymentmethodScreen(navController) }
+                    composable(Routes.PAYMENT) { PaymentverificationScreen(navController) }
                 }
             }
         }

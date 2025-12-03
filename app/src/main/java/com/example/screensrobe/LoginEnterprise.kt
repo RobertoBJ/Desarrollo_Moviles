@@ -115,40 +115,44 @@ fun LoginEnterprise(navController: NavController) {
                 // Botón iniciar sesión
                 Button(
                     onClick = {
+
                         if (correo.isBlank() || contraseña.isBlank()) {
                             Toast.makeText(context, "Completa todos los campos", Toast.LENGTH_SHORT).show()
                             return@Button
                         }
 
-                        // Login con Firebase Auth
                         auth.signInWithEmailAndPassword(correo, contraseña)
                             .addOnSuccessListener { result ->
                                 val userId = result.user?.uid
                                 if (userId != null) {
-                                    // Verificar que exista el documento en "empresas"
-                                    db.collection("empresa").document(userId).get()
+                                    db.collection("users").document(userId).get()
                                         .addOnSuccessListener { doc ->
                                             if (doc.exists()) {
-                                                // Usuario válido, navegar
-                                                navController.navigate("main") {
+                                                val isCompany = doc.getBoolean("isCompany") ?: false
+
+                                                if (!isCompany) {
+                                                    Toast.makeText(context, "Solo empresas pueden iniciar sesión aquí", Toast.LENGTH_SHORT).show()
+                                                    auth.signOut()
+                                                    return@addOnSuccessListener
+                                                }
+
+                                                // ✔️ Empresa válida → navegar al Main
+                                                navController.navigate(Routes.MAIN) {
                                                     popUpTo("loginenterprise") { inclusive = true }
                                                 }
                                             } else {
-                                                Toast.makeText(context, "Cuenta empresarial no registrada", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(context, "Cuenta no registrada", Toast.LENGTH_SHORT).show()
                                                 auth.signOut()
                                             }
                                         }
                                         .addOnFailureListener { e ->
-                                            Toast.makeText(context, "Error al verificar empresa: ${e.message}", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
                                         }
-                                } else {
-                                    Toast.makeText(context, "Error de autenticación", Toast.LENGTH_SHORT).show()
                                 }
                             }
                             .addOnFailureListener { e ->
                                 Toast.makeText(context, "Error al iniciar sesión: ${e.message}", Toast.LENGTH_SHORT).show()
                             }
-
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF59C1B8)),
                     shape = RoundedCornerShape(20.dp),
@@ -160,7 +164,7 @@ fun LoginEnterprise(navController: NavController) {
                 }
 
                 // Crear empresa
-                TextButton(onClick = { navController.navigate("createcompany") }) {
+                TextButton(onClick = { navController.navigate(Routes.CREATE_COMPANY) }) {
                     Text(
                         "¿Tu empresa no está registrada? Crear cuenta",
                         fontSize = 13.sp,

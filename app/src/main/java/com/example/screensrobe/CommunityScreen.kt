@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -34,25 +35,42 @@ fun CommunityScreen(navController: NavController, modifier: Modifier = Modifier)
 
     // 🔥 TRAER DATOS EN TIEMPO REAL
     LaunchedEffect(true) {
-        FirebaseFirestore.getInstance()
-            .collection("posts")
+        val firestore = FirebaseFirestore.getInstance()
+
+        firestore.collection("posts")
             .orderBy("timestamp", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, _ ->
                 if (snapshot != null) {
                     posts.clear()
+
                     for (doc in snapshot.documents) {
-                        posts.add(
-                            CommunityPost(
-                                userName = doc.getString("userName") ?: "Usuario",
-                                content = doc.getString("content") ?: "",
-                                imageUrls = doc.get("imageUrls") as? List<String> ?: emptyList(),
-                                profilePic = R.drawable.gojo
-                            )
-                        )
+                        val userId = doc.getString("userId") ?: continue
+
+                        // 🔍 Consultar si el usuario es empresa o no
+                        firestore.collection("users")
+                            .document(userId)
+                            .get()
+                            .addOnSuccessListener { userDoc ->
+                                val isCompany = userDoc.getBoolean("isCompany") ?: false
+
+                                // ❗ Solo agregar si NO es empresa
+                                if (!isCompany) {
+                                    val profileImage = userDoc.getString("profileImage")
+                                    posts.add(
+                                        CommunityPost(
+                                            userName = doc.getString("userName") ?: "Usuario",
+                                            content = doc.getString("content") ?: "",
+                                            profilePicUrl = profileImage,
+                                            profilePic = R.drawable.gojo
+                                        )
+                                    )
+                                }
+                            }
                     }
                 }
             }
     }
+
 
     Scaffold(
         topBar = {
@@ -68,16 +86,6 @@ fun CommunityScreen(navController: NavController, modifier: Modifier = Modifier)
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    IconButton(onClick = { navController.navigate("profile") }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.gojo),
-                            contentDescription = "Perfil",
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape),
-                            tint = Color.Unspecified
-                        )
-                    }
 
                     Text(
                         text = "Comunidad",
@@ -96,7 +104,7 @@ fun CommunityScreen(navController: NavController, modifier: Modifier = Modifier)
         //Botón de nueva publicación
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { navController.navigate("public") },
+                onClick = { navController.navigate(Routes.PUBLIC) },
                 containerColor = Color(0xFF7EB5AB),
                 shape = CircleShape,
                 modifier = Modifier.padding(bottom = 80.dp, end = 8.dp)
@@ -135,13 +143,25 @@ fun CommunityScreen(navController: NavController, modifier: Modifier = Modifier)
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Image(
-                                    painter = painterResource(id = post.profilePic),
-                                    contentDescription = "Perfil",
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(CircleShape)
-                                )
+                                if (!post.profilePicUrl.isNullOrEmpty()) {
+                                    AsyncImage(
+                                        model = post.profilePicUrl,
+                                        contentDescription = "Perfil",
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .clip(CircleShape),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.gojo),
+                                        contentDescription = "Perfil",
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .clip(CircleShape),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = post.userName,
@@ -156,29 +176,6 @@ fun CommunityScreen(navController: NavController, modifier: Modifier = Modifier)
                                 text = post.content,
                                 fontSize = 15.sp
                             )
-
-                            // Carrusel horizontal de imágenes
-                            if (post.imageUrls.isNotEmpty()) {
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Row(
-                                    modifier = Modifier
-                                        .horizontalScroll(rememberScrollState())
-                                        .fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    post.imageUrls.forEach { url ->
-                                        Image(
-                                            painter = rememberAsyncImagePainter(url),
-                                            contentDescription = null,
-                                            modifier = Modifier
-                                                .height(150.dp)
-                                                .width(250.dp)
-                                                .clip(RoundedCornerShape(12.dp)),
-                                            contentScale = ContentScale.Crop
-                                        )
-                                    }
-                                }
-                            }
                         }
                     }
                 }
@@ -191,6 +188,6 @@ fun CommunityScreen(navController: NavController, modifier: Modifier = Modifier)
 data class CommunityPost(
     val userName: String,
     val content: String,
-    val imageUrls: List<String> = emptyList(),
+    val profilePicUrl: String? = null,
     val profilePic: Int
 )
